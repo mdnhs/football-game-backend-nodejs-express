@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, requireFullAccount } from "../../middleware/auth";
 import { getMe, getDifficulty, getPlaysRemaining } from "./player.controller";
 
 export const playerRouter = Router();
 
-playerRouter.use(authMiddleware);
+playerRouter.use(authMiddleware, requireFullAccount);
 
 playerRouter.get("/me", getMe);
 playerRouter.get("/me/difficulty", getDifficulty);

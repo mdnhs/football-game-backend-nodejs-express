@@ -1,8 +1,14 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, requireFullAccount } from "../../middleware/auth";
 import { scoreRateLimiter } from "../../middleware/rateLimiter";
 import { submit } from "./score.controller";
 
 export const scoreRouter = Router();
 
-scoreRouter.post("/", authMiddleware, scoreRateLimiter, submit);
+scoreRouter.post(
+  "/",
+  authMiddleware,
+  requireFullAccount,
+  scoreRateLimiter,
+  submit,
+);

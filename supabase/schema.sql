@@ -69,6 +69,29 @@ INSERT INTO campaign_settings (campaign_start, campaign_end)
 SELECT now(), now() + interval '30 days'
 WHERE NOT EXISTS (SELECT 1 FROM campaign_settings);
 
+-- ── QR codes ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS qr_codes (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ref         TEXT UNIQUE NOT NULL,
+  label       TEXT NOT NULL,
+  target_path TEXT NOT NULL DEFAULT '/',
+  scan_count  INTEGER NOT NULL DEFAULT 0,
+  is_active   BOOLEAN NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_qr_codes_ref       ON qr_codes(ref);
+CREATE INDEX IF NOT EXISTS idx_qr_codes_is_active ON qr_codes(is_active);
+
+CREATE OR REPLACE FUNCTION increment_qr_scan(p_ref TEXT)
+RETURNS void AS $$
+  UPDATE qr_codes
+  SET scan_count = scan_count + 1,
+      updated_at = now()
+  WHERE ref = p_ref AND is_active = true;
+$$ LANGUAGE sql;
+
 -- ── Leaderboard views ──────────────────────────────────────
 CREATE OR REPLACE VIEW daily_leaderboard AS
 SELECT

@@ -11,6 +11,7 @@ async function main() {
 
   const server = app.listen(env.PORT, () => {
     logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
+    logger.info(`Docs: http://localhost:${env.PORT}/docs`);
   });
 
   const shutdown = async (signal: string) => {

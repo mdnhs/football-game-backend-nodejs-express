@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.adminRouter = void 0;
+const express_1 = require("express");
+const adminAuth_1 = require("../../middleware/adminAuth");
+const admin_controller_1 = require("./admin.controller");
+exports.adminRouter = (0, express_1.Router)();
+exports.adminRouter.use(adminAuth_1.adminAuthMiddleware);
+exports.adminRouter.get("/players", admin_controller_1.listPlayers);
+exports.adminRouter.patch("/players/:id/block", admin_controller_1.blockPlayer);
+exports.adminRouter.patch("/players/:id/unblock", admin_controller_1.unblockPlayer);
+exports.adminRouter.patch("/scores/:id/flag", admin_controller_1.flagScore);
+exports.adminRouter.get("/winners", admin_controller_1.getDailyWinners);
+exports.adminRouter.get("/winners/export", admin_controller_1.exportWinners);
+exports.adminRouter.get("/scores/flagged", admin_controller_1.getFlaggedScores);
+exports.adminRouter.patch("/settings", admin_controller_1.updateSettings);

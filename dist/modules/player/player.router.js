@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.playerRouter = void 0;
+const express_1 = require("express");
+const auth_1 = require("../../middleware/auth");
+const player_controller_1 = require("./player.controller");
+exports.playerRouter = (0, express_1.Router)();
+exports.playerRouter.use(auth_1.authMiddleware, auth_1.requireFullAccount);
+exports.playerRouter.get("/me", player_controller_1.getMe);
+exports.playerRouter.get("/me/difficulty", player_controller_1.getDifficulty);
+exports.playerRouter.get("/me/plays-remaining", player_controller_1.getPlaysRemaining);

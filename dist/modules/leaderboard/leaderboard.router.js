@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.leaderboardRouter = void 0;
+const express_1 = require("express");
+const auth_1 = require("../../middleware/auth");
+const leaderboard_controller_1 = require("./leaderboard.controller");
+exports.leaderboardRouter = (0, express_1.Router)();
+exports.leaderboardRouter.use(auth_1.authMiddleware, auth_1.requireFullAccount);
+exports.leaderboardRouter.get("/daily", leaderboard_controller_1.getDaily);
+exports.leaderboardRouter.get("/campaign", leaderboard_controller_1.getCampaign);
+exports.leaderboardRouter.get("/my-rank", leaderboard_controller_1.getMyRank);

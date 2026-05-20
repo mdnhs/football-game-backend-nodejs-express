@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.qrPublicRouter = exports.qrAdminRouter = void 0;
+const express_1 = require("express");
+const adminAuth_1 = require("../../middleware/adminAuth");
+const qr_controller_1 = require("./qr.controller");
+exports.qrAdminRouter = (0, express_1.Router)();
+exports.qrAdminRouter.use(adminAuth_1.adminAuthMiddleware);
+exports.qrAdminRouter.post("/", qr_controller_1.createQr);
+exports.qrAdminRouter.get("/", qr_controller_1.listQr);
+exports.qrAdminRouter.get("/:id/stats", qr_controller_1.statsQr);
+exports.qrAdminRouter.patch("/:id/deactivate", qr_controller_1.deactivateQr);
+exports.qrAdminRouter.patch("/:id/activate", qr_controller_1.activateQr);
+exports.qrPublicRouter = (0, express_1.Router)();
+exports.qrPublicRouter.get("/:ref", qr_controller_1.scanRedirect);

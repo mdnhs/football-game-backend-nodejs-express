@@ -7,12 +7,13 @@ export const openapiSpec = {
     version: "1.0.0",
     description:
       "Backend API for the football penalty-shootout campaign game. " +
-      "Auth flow: Firebase Phone OTP on client → exchange Firebase ID token for app JWT at `/api/auth/verify`.",
+      "All versioned endpoints live under `/api/v1`. Unversioned routes (`/health`, `/qr/{ref}`) are infrastructure. " +
+      "Auth flow: Firebase Phone OTP on client → exchange Firebase ID token for app JWT at `/api/v1/auth/verify-otp`.",
   },
   servers: [
     {
       url: `http://localhost:${env.PORT}`,
-      description: "Local dev",
+      description: "Local dev (root)",
     },
   ],
   tags: [
@@ -240,7 +241,7 @@ export const openapiSpec = {
       },
     },
 
-    "/api/auth/check-phone": {
+    "/api/v1/auth/check-phone": {
       post: {
         tags: ["Auth"],
         summary: "Check if a phone is registered (UX hint)",
@@ -280,12 +281,12 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/auth/verify-otp": {
+    "/api/v1/auth/verify-otp": {
       post: {
         tags: ["Auth"],
         summary: "Exchange Firebase ID token for app JWT",
         description:
-          "Step 4. If `isNew=true`, the returned token is a **pending** token (30m TTL) — frontend must call `/api/auth/complete-profile` next. If `isNew=false`, the token is a full JWT.",
+          "Step 4. If `isNew=true`, the returned token is a **pending** token (30m TTL) — frontend must call `/api/v1/auth/complete-profile` next. If `isNew=false`, the token is a full JWT.",
         requestBody: {
           required: true,
           content: {
@@ -326,7 +327,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/auth/complete-profile": {
+    "/api/v1/auth/complete-profile": {
       post: {
         tags: ["Auth"],
         summary: "Set displayName for new account (or update existing)",
@@ -369,7 +370,7 @@ export const openapiSpec = {
       },
     },
 
-    "/api/players/me": {
+    "/api/v1/players/me": {
       get: {
         tags: ["Player"],
         summary: "Current player profile",
@@ -387,7 +388,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/players/me/difficulty": {
+    "/api/v1/players/me/difficulty": {
       get: {
         tags: ["Player"],
         summary: "Current adaptive difficulty level (0–1)",
@@ -416,7 +417,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/players/me/plays-remaining": {
+    "/api/v1/players/me/plays-remaining": {
       get: {
         tags: ["Player"],
         summary: "Plays remaining today",
@@ -446,7 +447,7 @@ export const openapiSpec = {
       },
     },
 
-    "/api/scores": {
+    "/api/v1/scores": {
       post: {
         tags: ["Score"],
         summary: "Submit a match score (anti-cheat validated)",
@@ -488,7 +489,7 @@ export const openapiSpec = {
       },
     },
 
-    "/api/leaderboard/daily": {
+    "/api/v1/leaderboard/daily": {
       get: {
         tags: ["Leaderboard"],
         summary: "Daily leaderboard",
@@ -522,7 +523,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/leaderboard/campaign": {
+    "/api/v1/leaderboard/campaign": {
       get: {
         tags: ["Leaderboard"],
         summary: "Campaign leaderboard",
@@ -550,7 +551,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/leaderboard/my-rank": {
+    "/api/v1/leaderboard/my-rank": {
       get: {
         tags: ["Leaderboard"],
         summary: "Current player's rank",
@@ -597,7 +598,7 @@ export const openapiSpec = {
       },
     },
 
-    "/api/admin/players": {
+    "/api/v1/admin/players": {
       get: {
         tags: ["Admin"],
         summary: "List players (paginated)",
@@ -616,7 +617,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/players/{id}/block": {
+    "/api/v1/admin/players/{id}/block": {
       patch: {
         tags: ["Admin"],
         summary: "Block a player",
@@ -635,7 +636,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/players/{id}/unblock": {
+    "/api/v1/admin/players/{id}/unblock": {
       patch: {
         tags: ["Admin"],
         summary: "Unblock a player",
@@ -654,7 +655,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/scores/{id}/flag": {
+    "/api/v1/admin/scores/{id}/flag": {
       patch: {
         tags: ["Admin"],
         summary: "Manually flag a score (zeros it out)",
@@ -673,7 +674,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/winners": {
+    "/api/v1/admin/winners": {
       get: {
         tags: ["Admin"],
         summary: "Top 10 daily winners",
@@ -691,7 +692,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/winners/export": {
+    "/api/v1/admin/winners/export": {
       get: {
         tags: ["Admin"],
         summary: "Export winners as CSV",
@@ -712,7 +713,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/scores/flagged": {
+    "/api/v1/admin/scores/flagged": {
       get: {
         tags: ["Admin"],
         summary: "List flagged scores with shot logs",
@@ -731,7 +732,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/settings": {
+    "/api/v1/admin/settings": {
       patch: {
         tags: ["Admin"],
         summary: "Update campaign settings",
@@ -772,7 +773,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/qr-codes": {
+    "/api/v1/admin/qr-codes": {
       post: {
         tags: ["QR"],
         summary: "Create a QR code",
@@ -823,7 +824,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/qr-codes/{id}/stats": {
+    "/api/v1/admin/qr-codes/{id}/stats": {
       get: {
         tags: ["QR"],
         summary: "QR code stats (scans + signups)",
@@ -842,7 +843,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/qr-codes/{id}/deactivate": {
+    "/api/v1/admin/qr-codes/{id}/deactivate": {
       patch: {
         tags: ["QR"],
         summary: "Deactivate QR (404 on scan)",
@@ -861,7 +862,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/admin/qr-codes/{id}/activate": {
+    "/api/v1/admin/qr-codes/{id}/activate": {
       patch: {
         tags: ["QR"],
         summary: "Reactivate QR",
@@ -881,7 +882,7 @@ export const openapiSpec = {
       },
     },
 
-    "/api/analytics/dashboard": {
+    "/api/v1/analytics/dashboard": {
       get: {
         tags: ["Analytics"],
         summary: "Admin dashboard stats",
@@ -913,7 +914,7 @@ export const openapiSpec = {
         },
       },
     },
-    "/api/analytics/distribution": {
+    "/api/v1/analytics/distribution": {
       get: {
         tags: ["Analytics"],
         summary: "Score bucket distribution",

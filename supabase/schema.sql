@@ -124,6 +124,25 @@ WHERE s.is_flagged = false
 GROUP BY p.id, p.display_name, p.phone
 ORDER BY best_score DESC, best_goals DESC;
 
+-- ── Admins (RBAC) ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS admins (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL DEFAULT 'admin',
+  is_active     BOOLEAN NOT NULL DEFAULT true,
+  last_login_at TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT valid_role CHECK (role = 'admin')
+);
+
+CREATE INDEX IF NOT EXISTS idx_admins_email     ON admins(email);
+CREATE INDEX IF NOT EXISTS idx_admins_is_active ON admins(is_active);
+
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+
 -- ── RLS ────────────────────────────────────────────────────
 ALTER TABLE players     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scores      ENABLE ROW LEVEL SECURITY;

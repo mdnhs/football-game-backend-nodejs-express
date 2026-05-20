@@ -23,7 +23,12 @@ const envSchema = zod_1.z.object({
         .string()
         .default("3")
         .transform((v) => Number(v)),
-    ADMIN_SECRET: zod_1.z.string().min(1),
+    // Default admin seed (upserted on startup)
+    DEFAULT_ADMIN_EMAIL: zod_1.z.email(),
+    DEFAULT_ADMIN_PASSWORD: zod_1.z.string().min(8),
+    // Admin JWT — can reuse JWT_SECRET or set separately
+    ADMIN_JWT_SECRET: zod_1.z.string().min(32).optional(),
+    ADMIN_JWT_EXPIRES_IN: zod_1.z.string().default('12h'),
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {

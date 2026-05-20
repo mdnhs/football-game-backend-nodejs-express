@@ -18,6 +18,7 @@ const leaderboard_router_1 = require("./modules/leaderboard/leaderboard.router")
 const admin_router_1 = require("./modules/admin/admin.router");
 const analytics_router_1 = require("./modules/analytics/analytics.router");
 const qr_router_1 = require("./modules/qr/qr.router");
+const admin_auth_router_1 = require("./modules/adminAuth/admin-auth.router");
 const openapi_1 = require("./docs/openapi");
 function createApp() {
     const app = (0, express_1.default)();
@@ -41,6 +42,7 @@ function createApp() {
     app.use("/api/v1/qr", qr_router_1.qrPublicRouter);
     app.use("/api/v1", rateLimiter_1.generalRateLimiter);
     app.use("/api/v1/auth", auth_router_1.authRouter);
+    app.use("/api/v1/admin/auth", admin_auth_router_1.adminAuthRouter);
     app.use("/api/v1/players", player_router_1.playerRouter);
     app.use("/api/v1/scores", score_router_1.scoreRouter);
     app.use("/api/v1/leaderboard", leaderboard_router_1.leaderboardRouter);

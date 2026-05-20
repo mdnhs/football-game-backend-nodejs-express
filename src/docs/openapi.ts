@@ -18,6 +18,7 @@ export const openapiSpec = {
   ],
   tags: [
     { name: "Auth" },
+    { name: "AdminAuth" },
     { name: "Player" },
     { name: "Score" },
     { name: "Leaderboard" },
@@ -34,11 +35,11 @@ export const openapiSpec = {
         bearerFormat: "JWT",
         description: "App JWT issued by POST /api/auth/verify",
       },
-      adminSecret: {
-        type: "apiKey",
-        in: "header",
-        name: "x-admin-secret",
-        description: "Admin panel shared secret",
+      adminBearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Admin JWT issued by POST /api/v1/admin/auth/login",
       },
     },
     schemas: {
@@ -192,6 +193,26 @@ export const openapiSpec = {
           difficultyBase: { type: "number", minimum: 0, maximum: 1 },
         },
       },
+      AdminLoginBody: {
+        type: "object",
+        required: ["email", "password"],
+        properties: {
+          email: { type: "string", format: "email" },
+          password: { type: "string", minLength: 1 },
+        },
+      },
+      AdminSession: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          email: { type: "string", format: "email" },
+          role: {
+            type: "string",
+            enum: ["admin"],
+          },
+          permissions: { type: "array", items: { type: "string" } },
+        },
+      },
     },
     responses: {
       Unauthorized: {
@@ -203,7 +224,7 @@ export const openapiSpec = {
         },
       },
       Forbidden: {
-        description: "Admin secret missing or blocked account",
+        description: "Missing permission or blocked account",
         content: {
           "application/json": {
             schema: { $ref: "#/components/schemas/ErrorEnvelope" },
@@ -241,6 +262,66 @@ export const openapiSpec = {
       },
     },
 
+    "/api/v1/admin/auth/login": {
+      post: {
+        tags: ["AdminAuth"],
+        summary: "Admin login (email + password)",
+        description:
+          "Issues an admin JWT (12h TTL by default). Returns admin id, email, role and permission list. Use the token as `Authorization: Bearer <token>` against all `/api/v1/admin/*` endpoints.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminLoginBody" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Token + admin session",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    error: { type: "boolean" },
+                    message: { type: "string" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        token: { type: "string" },
+                        admin: { $ref: "#/components/schemas/AdminSession" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "401": { description: "Invalid email or password" },
+          "403": { description: "Account disabled" },
+        },
+      },
+    },
+    "/api/v1/admin/auth/me": {
+      get: {
+        tags: ["AdminAuth"],
+        summary: "Current admin session",
+        security: [{ adminBearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Admin profile",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AdminSession" },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthorized" },
+        },
+      },
+    },
     "/api/v1/auth/check-phone": {
       post: {
         tags: ["Auth"],
@@ -602,7 +683,7 @@ export const openapiSpec = {
       get: {
         tags: ["Admin"],
         summary: "List players (paginated)",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", default: 1 } },
           {
@@ -621,7 +702,7 @@ export const openapiSpec = {
       patch: {
         tags: ["Admin"],
         summary: "Block a player",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -640,7 +721,7 @@ export const openapiSpec = {
       patch: {
         tags: ["Admin"],
         summary: "Unblock a player",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -659,7 +740,7 @@ export const openapiSpec = {
       patch: {
         tags: ["Admin"],
         summary: "Manually flag a score (zeros it out)",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -678,7 +759,7 @@ export const openapiSpec = {
       get: {
         tags: ["Admin"],
         summary: "Top 10 daily winners",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "date",
@@ -696,7 +777,7 @@ export const openapiSpec = {
       get: {
         tags: ["Admin"],
         summary: "Export winners as CSV",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "date",
@@ -717,7 +798,7 @@ export const openapiSpec = {
       get: {
         tags: ["Admin"],
         summary: "List flagged scores with shot logs",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", default: 1 } },
           {
@@ -736,7 +817,7 @@ export const openapiSpec = {
       patch: {
         tags: ["Admin"],
         summary: "Update campaign settings",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -777,7 +858,7 @@ export const openapiSpec = {
       post: {
         tags: ["QR"],
         summary: "Create a QR code",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -809,7 +890,7 @@ export const openapiSpec = {
       get: {
         tags: ["QR"],
         summary: "List QR codes",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           { name: "page", in: "query", schema: { type: "integer", default: 1 } },
           {
@@ -828,7 +909,7 @@ export const openapiSpec = {
       get: {
         tags: ["QR"],
         summary: "QR code stats (scans + signups)",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -847,7 +928,7 @@ export const openapiSpec = {
       patch: {
         tags: ["QR"],
         summary: "Deactivate QR (404 on scan)",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -866,7 +947,7 @@ export const openapiSpec = {
       patch: {
         tags: ["QR"],
         summary: "Reactivate QR",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         parameters: [
           {
             name: "id",
@@ -886,7 +967,7 @@ export const openapiSpec = {
       get: {
         tags: ["Analytics"],
         summary: "Admin dashboard stats",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         responses: {
           "200": {
             description: "Stats",
@@ -918,7 +999,7 @@ export const openapiSpec = {
       get: {
         tags: ["Analytics"],
         summary: "Score bucket distribution",
-        security: [{ adminSecret: [] }],
+        security: [{ adminBearerAuth: [] }],
         responses: {
           "200": { description: "Buckets" },
           "403": { $ref: "#/components/responses/Forbidden" },

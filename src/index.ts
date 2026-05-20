@@ -1,11 +1,14 @@
-import { createApp } from "./app";
-import { env } from "./config/env";
-import { redis } from "./config/redis";
-import { logger } from "./utils/logger";
+import { createApp } from './app';
+import { env } from './config/env';
+import { redis } from './config/redis';
+import { logger } from './utils/logger';
+import { bootstrapDefaultAdmin } from './modules/adminAuth/admin-auth.service';
 
 async function main() {
   await redis.connect();
-  logger.info("Redis connected");
+  logger.info('Redis connected');
+
+  await bootstrapDefaultAdmin();
 
   const app = createApp();
 
@@ -21,11 +24,11 @@ async function main() {
     });
   };
 
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 main().catch((err) => {
-  logger.error("Failed to start server:", err);
+  logger.error('Failed to start server:', err);
   process.exit(1);
 });

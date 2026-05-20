@@ -4,9 +4,11 @@ const app_1 = require("./app");
 const env_1 = require("./config/env");
 const redis_1 = require("./config/redis");
 const logger_1 = require("./utils/logger");
+const admin_auth_service_1 = require("./modules/adminAuth/admin-auth.service");
 async function main() {
     await redis_1.redis.connect();
-    logger_1.logger.info("Redis connected");
+    logger_1.logger.info('Redis connected');
+    await (0, admin_auth_service_1.bootstrapDefaultAdmin)();
     const app = (0, app_1.createApp)();
     const server = app.listen(env_1.env.PORT, () => {
         logger_1.logger.info(`Server running on port ${env_1.env.PORT} [${env_1.env.NODE_ENV}]`);
@@ -18,10 +20,10 @@ async function main() {
             redis_1.redis.quit().finally(() => process.exit(0));
         });
     };
-    process.on("SIGTERM", () => shutdown("SIGTERM"));
-    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 }
 main().catch((err) => {
-    logger_1.logger.error("Failed to start server:", err);
+    logger_1.logger.error('Failed to start server:', err);
     process.exit(1);
 });

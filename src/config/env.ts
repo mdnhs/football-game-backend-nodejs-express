@@ -21,7 +21,12 @@ const envSchema = z.object({
     .string()
     .default("3")
     .transform((v) => Number(v)),
-  ADMIN_SECRET: z.string().min(1),
+  // Default admin seed (upserted on startup)
+  DEFAULT_ADMIN_EMAIL: z.email(),
+  DEFAULT_ADMIN_PASSWORD: z.string().min(8),
+  // Admin JWT — can reuse JWT_SECRET or set separately
+  ADMIN_JWT_SECRET: z.string().min(32).optional(),
+  ADMIN_JWT_EXPIRES_IN: z.string().default('12h'),
 });
 
 const parsed = envSchema.safeParse(process.env);

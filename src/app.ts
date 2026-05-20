@@ -45,19 +45,19 @@ export function createApp() {
     res.json({ status: "ok" });
   });
 
-  app.use("/qr", qrPublicRouter);
+  app.use("/api/v1/qr", qrPublicRouter);
 
-  app.use("/api", generalRateLimiter);
-  app.use("/api/auth", authRouter);
-  app.use("/api/players", playerRouter);
-  app.use("/api/scores", scoreRouter);
-  app.use("/api/leaderboard", leaderboardRouter);
-  app.use("/api/admin", adminRouter);
-  app.use("/api/admin/qr-codes", qrAdminRouter);
-  app.use("/api/analytics", analyticsRouter);
+  app.use("/api/v1", generalRateLimiter);
+  app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/players", playerRouter);
+  app.use("/api/v1/scores", scoreRouter);
+  app.use("/api/v1/leaderboard", leaderboardRouter);
+  app.use("/api/v1/admin", adminRouter);
+  app.use("/api/v1/admin/qr-codes", qrAdminRouter);
+  app.use("/api/v1/analytics", analyticsRouter);
 
   app.use((_req, res) => {
-    res.status(404).json({ error: "Route not found" });
+    res.status(404).json({ error: true, message: "Route not found", data: null, status: 404 });
   });
 
   app.use(errorHandler);

@@ -11,7 +11,7 @@ import {
   QrRefConflictError,
 } from "./qr.service";
 import { parsePagination } from "../../utils/pagination";
-import { ok, fail } from "../../utils/response";
+import { ok, okPaginated, fail } from "../../utils/response";
 
 export async function createQr(
   req: Request,
@@ -39,7 +39,7 @@ export async function listQr(
   try {
     const { page, limit } = parsePagination(req);
     const result = await listQrCodes(page, limit);
-    ok(res, result);
+    okPaginated(res, result.data, { total: result.total, page, limit });
   } catch (err) {
     next(err);
   }

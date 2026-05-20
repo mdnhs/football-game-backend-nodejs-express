@@ -10,13 +10,20 @@ export function errorHandler(
 ) {
   if (err instanceof ZodError) {
     res.status(400).json({
-      error: "Validation error",
-      details: err.flatten().fieldErrors,
+      error: true,
+      message: "Validation error",
+      data: err.flatten().fieldErrors,
+      status: 400,
     });
     return;
   }
 
   logger.error(err.message, { stack: err.stack });
 
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({
+    error: true,
+    message: "Internal server error",
+    data: null,
+    status: 500,
+  });
 }

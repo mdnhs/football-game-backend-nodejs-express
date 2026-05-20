@@ -11,7 +11,7 @@ import {
   getFlaggedScores as svcGetFlaggedScores,
 } from "./admin.service";
 import { parsePagination } from "../../utils/pagination";
-import { ok, fail } from "../../utils/response";
+import { ok, okPaginated, fail } from "../../utils/response";
 
 const settingsSchema = z.object({
   campaignStart: z.string().optional(),
@@ -28,7 +28,7 @@ export async function listPlayers(
   try {
     const { page, limit } = parsePagination(req);
     const result = await svcListPlayers(page, limit);
-    ok(res, result);
+    okPaginated(res, result.data ?? [], { total: result.total, page, limit });
   } catch (err) {
     next(err);
   }
@@ -130,7 +130,7 @@ export async function getFlaggedScores(
   try {
     const { page, limit } = parsePagination(req);
     const result = await svcGetFlaggedScores(page, limit);
-    ok(res, result);
+    okPaginated(res, result.data, { total: result.total, page, limit });
   } catch (err) {
     next(err);
   }

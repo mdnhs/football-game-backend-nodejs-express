@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminAuthMiddleware } from "../../middleware/adminAuth";
+import { adminJwtAuth, requirePermission } from "../../middleware/adminAuth";
 import {
   createQr,
   listQr,
@@ -11,13 +11,13 @@ import {
 
 export const qrAdminRouter = Router();
 
-qrAdminRouter.use(adminAuthMiddleware);
+qrAdminRouter.use(adminJwtAuth);
 
-qrAdminRouter.post("/", createQr);
-qrAdminRouter.get("/", listQr);
-qrAdminRouter.get("/:id/stats", statsQr);
-qrAdminRouter.patch("/:id/deactivate", deactivateQr);
-qrAdminRouter.patch("/:id/activate", activateQr);
+qrAdminRouter.post("/", requirePermission("admin.qr.create"), createQr);
+qrAdminRouter.get("/", requirePermission("admin.qr.view_list"), listQr);
+qrAdminRouter.get("/:id/stats", requirePermission("admin.qr.view_list"), statsQr);
+qrAdminRouter.patch("/:id/deactivate", requirePermission("admin.qr.create"), deactivateQr);
+qrAdminRouter.patch("/:id/activate", requirePermission("admin.qr.create"), activateQr);
 
 export const qrPublicRouter = Router();
 qrPublicRouter.get("/:ref", scanRedirect);

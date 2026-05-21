@@ -13,6 +13,8 @@ import { adminRouter } from "./modules/admin/admin.router";
 import { analyticsRouter } from "./modules/analytics/analytics.router";
 import { qrAdminRouter, qrPublicRouter } from "./modules/qr/qr.router";
 import { adminAuthRouter } from "./modules/adminAuth/admin-auth.router";
+import { rbacRouter } from "./modules/rbac/rbac.router";
+import { adsAdminRouter, adsPublicRouter } from "./modules/ads/ads.router";
 import { openapiSpec } from "./docs/openapi";
 
 export function createApp() {
@@ -51,6 +53,9 @@ export function createApp() {
   app.use("/api/v1", generalRateLimiter);
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/admin/auth", adminAuthRouter);
+  app.use("/api/v1/admin/rbac", rbacRouter);
+  app.use("/api/v1/admin/ads", adsAdminRouter);
+  app.use("/api/v1/ads", adsPublicRouter);
   app.use("/api/v1/players", playerRouter);
   app.use("/api/v1/scores", scoreRouter);
   app.use("/api/v1/leaderboard", leaderboardRouter);

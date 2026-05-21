@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminAuthMiddleware } from "../../middleware/adminAuth";
+import { adminJwtAuth, requirePermission } from "../../middleware/adminAuth";
 import {
   listPlayers,
   blockPlayer,
@@ -13,13 +13,16 @@ import {
 
 export const adminRouter = Router();
 
-adminRouter.use(adminAuthMiddleware);
+adminRouter.use(adminJwtAuth);
 
-adminRouter.get("/players", listPlayers);
-adminRouter.patch("/players/:id/block", blockPlayer);
-adminRouter.patch("/players/:id/unblock", unblockPlayer);
-adminRouter.patch("/scores/:id/flag", flagScore);
-adminRouter.get("/winners", getDailyWinners);
-adminRouter.get("/winners/export", exportWinners);
-adminRouter.get("/scores/flagged", getFlaggedScores);
-adminRouter.patch("/settings", updateSettings);
+adminRouter.get("/players", requirePermission("admin.player.view_list"), listPlayers);
+adminRouter.patch("/players/:id/block", requirePermission("admin.player.disable"), blockPlayer);
+adminRouter.patch("/players/:id/unblock", requirePermission("admin.player.disable"), unblockPlayer);
+
+adminRouter.get("/scores/flagged", requirePermission("admin.score.view_list"), getFlaggedScores);
+adminRouter.patch("/scores/:id/flag", requirePermission("admin.score.flag"), flagScore);
+
+adminRouter.get("/winners", requirePermission("admin.winner.view_list"), getDailyWinners);
+adminRouter.get("/winners/export", requirePermission("admin.winner.view_list"), exportWinners);
+
+adminRouter.patch("/settings", requirePermission("admin.settings.edit"), updateSettings);

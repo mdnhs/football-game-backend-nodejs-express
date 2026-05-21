@@ -23,6 +23,8 @@ export const openapiSpec = {
     { name: "Score" },
     { name: "Leaderboard" },
     { name: "Admin" },
+    { name: "RBAC" },
+    { name: "Ads" },
     { name: "QR" },
     { name: "Analytics" },
     { name: "Health" },
@@ -206,11 +208,182 @@ export const openapiSpec = {
         properties: {
           id: { type: "string", format: "uuid" },
           email: { type: "string", format: "email" },
-          role: {
-            type: "string",
-            enum: ["admin"],
-          },
+          role: { type: "string", description: "Role name (e.g. super_admin, admin, moderator, viewer)" },
+          roleId: { type: "string", format: "uuid" },
           permissions: { type: "array", items: { type: "string" } },
+        },
+      },
+      UpdateMeBody: {
+        type: "object",
+        required: ["email"],
+        properties: { email: { type: "string", format: "email" } },
+      },
+      ChangePasswordBody: {
+        type: "object",
+        required: ["currentPassword", "newPassword"],
+        properties: {
+          currentPassword: { type: "string", minLength: 1 },
+          newPassword: { type: "string", minLength: 8 },
+        },
+      },
+
+      // ── RBAC ─────────────────────────────────────────────
+      Role: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          name: { type: "string", example: "moderator" },
+          description: { type: "string", nullable: true },
+          permissions: { type: "array", items: { type: "string" } },
+          is_system_role: { type: "boolean" },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
+        },
+      },
+      CreateRoleBody: {
+        type: "object",
+        required: ["name"],
+        properties: {
+          name: {
+            type: "string",
+            minLength: 2,
+            maxLength: 50,
+            pattern: "^[a-z0-9_]+$",
+            description: "Lowercase letters, digits, underscores",
+          },
+          description: { type: "string", maxLength: 255 },
+          permissions: { type: "array", items: { type: "string" } },
+        },
+      },
+      UpdateRoleBody: {
+        type: "object",
+        properties: {
+          description: { type: "string", maxLength: 255 },
+          permissions: { type: "array", items: { type: "string" } },
+        },
+      },
+      AdminUser: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          email: { type: "string", format: "email" },
+          role: { type: "string" },
+          role_id: { type: "string", format: "uuid" },
+          is_active: { type: "boolean" },
+          last_login_at: { type: "string", format: "date-time", nullable: true },
+          created_at: { type: "string", format: "date-time" },
+        },
+      },
+      CreateAdminBody: {
+        type: "object",
+        required: ["email", "password", "roleId"],
+        properties: {
+          email: { type: "string", format: "email" },
+          password: { type: "string", minLength: 8 },
+          roleId: { type: "string", format: "uuid" },
+        },
+      },
+      UpdateAdminBody: {
+        type: "object",
+        description: "Partial update. At least one field required.",
+        properties: {
+          email: { type: "string", format: "email" },
+          roleId: { type: "string", format: "uuid" },
+          isActive: { type: "boolean" },
+          password: { type: "string", minLength: 8 },
+        },
+      },
+
+      // ── Ads ──────────────────────────────────────────────
+      AdSlide: {
+        type: "object",
+        required: ["url"],
+        properties: {
+          url: { type: "string", format: "uri" },
+          caption: { type: "string", maxLength: 200 },
+          clickUrl: { type: "string", format: "uri" },
+        },
+      },
+      Ad: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          title: { type: "string" },
+          kind: { type: "string", enum: ["single", "carousel"] },
+          media_type: { type: "string", enum: ["image", "video"], nullable: true },
+          media_url: { type: "string", format: "uri", nullable: true },
+          click_url: { type: "string", format: "uri", nullable: true },
+          caption: { type: "string", nullable: true },
+          slides: { type: "array", items: { $ref: "#/components/schemas/AdSlide" } },
+          is_active: { type: "boolean" },
+          display_order: { type: "integer", minimum: 0 },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
+        },
+      },
+      CreateSingleAdBody: {
+        type: "object",
+        required: ["kind", "title", "mediaType", "mediaUrl"],
+        properties: {
+          kind: { type: "string", enum: ["single"] },
+          title: { type: "string", minLength: 1, maxLength: 120 },
+          mediaType: { type: "string", enum: ["image", "video"] },
+          mediaUrl: { type: "string", format: "uri" },
+          caption: { type: "string", maxLength: 200 },
+          clickUrl: { type: "string", format: "uri" },
+          isActive: { type: "boolean", default: true },
+          displayOrder: { type: "integer", minimum: 0, default: 0 },
+        },
+      },
+      CreateCarouselAdBody: {
+        type: "object",
+        required: ["kind", "title", "slides"],
+        properties: {
+          kind: { type: "string", enum: ["carousel"] },
+          title: { type: "string", minLength: 1, maxLength: 120 },
+          slides: {
+            type: "array",
+            minItems: 1,
+            maxItems: 20,
+            items: { $ref: "#/components/schemas/AdSlide" },
+          },
+          caption: { type: "string", maxLength: 200 },
+          clickUrl: { type: "string", format: "uri" },
+          isActive: { type: "boolean", default: true },
+          displayOrder: { type: "integer", minimum: 0, default: 0 },
+        },
+      },
+      CreateAdBody: {
+        oneOf: [
+          { $ref: "#/components/schemas/CreateSingleAdBody" },
+          { $ref: "#/components/schemas/CreateCarouselAdBody" },
+        ],
+        discriminator: {
+          propertyName: "kind",
+          mapping: {
+            single: "#/components/schemas/CreateSingleAdBody",
+            carousel: "#/components/schemas/CreateCarouselAdBody",
+          },
+        },
+      },
+      UpdateAdBody: {
+        type: "object",
+        description: "Partial update. kind cannot change.",
+        properties: {
+          title: { type: "string", minLength: 1, maxLength: 120 },
+          caption: { type: "string", maxLength: 200 },
+          clickUrl: { type: "string", format: "uri" },
+          mediaType: { type: "string", enum: ["image", "video"], description: "single ads only" },
+          mediaUrl: { type: "string", format: "uri", description: "single ads only" },
+          slides: {
+            type: "array",
+            minItems: 1,
+            maxItems: 20,
+            items: { $ref: "#/components/schemas/AdSlide" },
+            description: "carousel ads only",
+          },
+          isActive: { type: "boolean" },
+          displayOrder: { type: "integer", minimum: 0 },
         },
       },
     },
@@ -319,6 +492,363 @@ export const openapiSpec = {
             },
           },
           "401": { $ref: "#/components/responses/Unauthorized" },
+        },
+      },
+      patch: {
+        tags: ["AdminAuth"],
+        summary: "Update own email (forces re-login)",
+        security: [{ adminBearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateMeBody" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Updated profile" },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "401": { $ref: "#/components/responses/Unauthorized" },
+          "409": { description: "Email already in use" },
+        },
+      },
+    },
+    "/api/v1/admin/auth/change-password": {
+      post: {
+        tags: ["AdminAuth"],
+        summary: "Change own password (forces re-login)",
+        security: [{ adminBearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ChangePasswordBody" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Password changed" },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "401": { description: "Current password incorrect or unauthorized" },
+        },
+      },
+    },
+
+    // ── RBAC ────────────────────────────────────────────────
+    "/api/v1/admin/rbac/permissions": {
+      get: {
+        tags: ["RBAC"],
+        summary: "List all available permission strings",
+        security: [{ adminBearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Permission catalog",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { type: "string" } },
+              },
+            },
+          },
+          "403": { $ref: "#/components/responses/Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/rbac/roles": {
+      get: {
+        tags: ["RBAC"],
+        summary: "List roles",
+        security: [{ adminBearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Roles",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Role" } },
+              },
+            },
+          },
+          "403": { $ref: "#/components/responses/Forbidden" },
+        },
+      },
+      post: {
+        tags: ["RBAC"],
+        summary: "Create role",
+        security: [{ adminBearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateRoleBody" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Created role",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Role" } },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "409": { description: "Role name already exists" },
+        },
+      },
+    },
+    "/api/v1/admin/rbac/roles/{id}": {
+      patch: {
+        tags: ["RBAC"],
+        summary: "Update role (system roles cannot edit permissions)",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateRoleBody" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Updated role" },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { description: "Forbidden or system role permissions locked" },
+          "404": { description: "Not found" },
+        },
+      },
+      delete: {
+        tags: ["RBAC"],
+        summary: "Delete role (must have no assigned admins; system roles protected)",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          "200": { description: "Deleted" },
+          "403": { description: "System role cannot be deleted" },
+          "409": { description: "Role assigned to admins" },
+        },
+      },
+    },
+    "/api/v1/admin/rbac/admins": {
+      get: {
+        tags: ["RBAC"],
+        summary: "List admin users",
+        security: [{ adminBearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Admins",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/AdminUser" } },
+              },
+            },
+          },
+          "403": { $ref: "#/components/responses/Forbidden" },
+        },
+      },
+      post: {
+        tags: ["RBAC"],
+        summary: "Create admin user",
+        security: [{ adminBearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateAdminBody" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Created admin",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/AdminUser" } },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "409": { description: "Email already in use" },
+        },
+      },
+    },
+    "/api/v1/admin/rbac/admins/{id}": {
+      patch: {
+        tags: ["RBAC"],
+        summary: "Update admin (email, role, active flag, password). Cannot self-deactivate.",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateAdminBody" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Updated" },
+          "400": { description: "Validation or self-deactivation blocked" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "409": { description: "Email already in use" },
+        },
+      },
+      delete: {
+        tags: ["RBAC"],
+        summary: "Delete admin. Cannot delete self.",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          "200": { description: "Deleted" },
+          "400": { description: "Cannot delete self" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+        },
+      },
+    },
+
+    // ── Ads ─────────────────────────────────────────────────
+    "/api/v1/ads": {
+      get: {
+        tags: ["Ads"],
+        summary: "Public list of active ads (no auth)",
+        responses: {
+          "200": {
+            description: "Active ads ordered by display_order asc",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Ad" } },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/admin/ads": {
+      get: {
+        tags: ["Ads"],
+        summary: "Admin list (all ads incl. inactive)",
+        security: [{ adminBearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "Ads",
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Ad" } },
+              },
+            },
+          },
+          "403": { $ref: "#/components/responses/Forbidden" },
+        },
+      },
+      post: {
+        tags: ["Ads"],
+        summary: "Create ad (single or carousel)",
+        security: [{ adminBearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateAdBody" },
+              examples: {
+                single: {
+                  summary: "Single image ad",
+                  value: {
+                    kind: "single",
+                    title: "Promo banner",
+                    mediaType: "image",
+                    mediaUrl: "https://cdn.example/banner.jpg",
+                    clickUrl: "https://shop.example",
+                    caption: "Limited time offer",
+                    isActive: true,
+                    displayOrder: 0,
+                  },
+                },
+                carousel: {
+                  summary: "Image carousel",
+                  value: {
+                    kind: "carousel",
+                    title: "Holiday set",
+                    slides: [
+                      { url: "https://cdn.example/1.jpg", caption: "Day 1" },
+                      { url: "https://cdn.example/2.jpg", clickUrl: "https://buy.example" },
+                    ],
+                    displayOrder: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Created ad",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Ad" } },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+        },
+      },
+    },
+    "/api/v1/admin/ads/{id}": {
+      get: {
+        tags: ["Ads"],
+        summary: "Get one ad",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          "200": {
+            description: "Ad",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/Ad" } },
+            },
+          },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "404": { description: "Not found" },
+        },
+      },
+      patch: {
+        tags: ["Ads"],
+        summary: "Update ad (kind-locked)",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateAdBody" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Updated ad" },
+          "400": { description: "Validation or kind/field mismatch" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "404": { description: "Not found" },
+        },
+      },
+      delete: {
+        tags: ["Ads"],
+        summary: "Delete ad",
+        security: [{ adminBearerAuth: [] }],
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        responses: {
+          "200": { description: "Deleted" },
+          "403": { $ref: "#/components/responses/Forbidden" },
         },
       },
     },
